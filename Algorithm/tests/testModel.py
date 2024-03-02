@@ -1,6 +1,10 @@
 import sys
+import os 
 import unittest
-sys.path.append(R"C:\Code\3DReconstruction")
+
+#gotta mess around with the path structure a bit to expose things for unit tests
+projectPath = os.path.dirname(os.path.dirname(sys.path[0]))
+sys.path.append(projectPath)
 
 from Algorithm.Model import exampleFunc
 

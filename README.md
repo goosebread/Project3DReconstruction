@@ -1,1 +1,7 @@
-3D Reconstruction Project
+# 3D Reconstruction Project
+
+## dependencies
+* opencv-python
+
+## dev dependencies
+* unittest
