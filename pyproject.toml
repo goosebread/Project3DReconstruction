@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "project-3d-reconstruction"
+version = "0.1.0-dev"
+description = ""
+authors = [
+    "Nathan McGuire <mcguire.n@northeastern.edu>",
+    "Brian Schubert <schubert.b@northeastern.edu>",
+    "Alex Yeh <yeh.al@northeastern.edu>"
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
