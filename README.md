@@ -1,7 +1,8 @@
 # 3D Reconstruction Project
 
-## dependencies
-* opencv-python
+## Setup
 
-## dev dependencies
-* unittest
+To install this project and its dependencies, run
+```shell
+$ pip install -e .
+```

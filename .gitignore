@@ -1,6 +1,10 @@
 # IDEs
 /.idea/
 
+# Virtual environments
+/*venv*/
+/.*venv*/
+
 # Build and tooling artifacts
 __pycache__/
 /dist/
