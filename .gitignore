@@ -1,2 +1,13 @@
-Data/Datasets/*
-!Data/Datasets/todo.md
+# IDEs
+/.idea/
+
+# Build and tooling artifacts
+__pycache__/
+/dist/
+
+# Misc.
+/.local/
+
+# Data
+/Data/Datasets/*
+!/Data/Datasets/todo.md
