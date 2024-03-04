@@ -17,7 +17,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 opencv-python = "^4.9.0.80"
-
+tqdm = "^4.66.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.2.0"
