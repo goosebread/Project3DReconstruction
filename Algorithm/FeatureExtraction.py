@@ -16,7 +16,7 @@ def referenceSIFT(img):
     gray= cv.cvtColor(img,cv.COLOR_BGR2GRAY)
     #use this space to specify additional parameters
 
-    sift = cv.SIFT_create()
+    sift = cv.SIFT_create(nfeatures=1000)
     kp, des = sift.detectAndCompute(gray,None)
     return kp, des
 
@@ -25,12 +25,35 @@ def referenceSIFT(img):
 #We can probably use parallelism to conpute this faster
 #inputs: two sets of keypoints and descriptors
 #return: set of matches
-def featureMatcher(kp1, des1, kp2, des2):
-    #for each kp1:
-        #for each kp2:
-            #calc distance/l2 norm
+def featureMatcher(kp1, des1, kp2, des2, threshold=0.8):
+    matches = []
+    print(len(kp1))
+    for i_index in range(len(kp1)):
+        print(i_index)
+        best=np.inf
+        bestJIndex=-1
+        secondBest=np.inf
+        for j_index in range(len(kp2)):
+            #calc l2 norm
+            distanceSquared = np.linalg.norm(des1[i_index] - des2[j_index], ord=2)
             #track best 2 matches
+            if distanceSquared<=best:
+                bestJIndex=j_index
+                secondBest=best
+                best=distanceSquared
+            elif distanceSquared<=secondBest:
+                secondBest=distanceSquared
         #calculate ratio and compare against threshold
+        ratio = best/secondBest
         #tau = 0.8 for euclidean distance, 0.64 for L2 norm
         #if ratio test passed, add to list or dictionary
+        if ratio<threshold**2:
+            matches.append((kp1[i_index], kp2[bestJIndex]))
     #return list or dictionary
+    return matches
+
+def outlierRemover(matches):
+    #use RANSAC
+    #use 8 point correspondances to estimate a fundamental matrix
+    #need some sort of match score for each fundamental matrix
+    
