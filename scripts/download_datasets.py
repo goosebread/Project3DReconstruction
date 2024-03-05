@@ -20,7 +20,7 @@ import sys
 import urllib.request
 from collections.abc import Collection
 from dataclasses import dataclass
-from typing import BinaryIO, Final, NoReturn
+from typing import BinaryIO, Final, Iterable, NoReturn
 
 import tqdm
 
@@ -28,9 +28,18 @@ import tqdm
 @dataclass
 class Dataset:
     identifier: str
+    """Dataset identifier, used for filtering datasets in the CLI."""
+
     destination: str
+    """Destination path for the dataset, relative to the data directory root."""
+
     url: str
+    """URL to download the dataset from."""
+
     sha256: bytes | None = None
+    """SHA256 checksum of the dataset file."""
+
+    # TODO: add unpacker?
 
 
 DATASETS: Final = [
@@ -66,6 +75,7 @@ DATASETS: Final = [
 
 
 def _make_parser() -> argparse.ArgumentParser:
+    """Create CLI argument parser."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data-dir",
@@ -92,6 +102,7 @@ def _make_parser() -> argparse.ArgumentParser:
 
 
 def _find_project_root(search_base: pathlib.Path) -> pathlib.Path:
+    """Locate project root directory for the given path."""
     curr_dir = search_base
     while True:
         if curr_dir.joinpath("pyproject.toml").is_file():
@@ -108,6 +119,7 @@ def _download_url(
     bar: tqdm.tqdm[NoReturn],
     chunk_size: int = 16 * 1024,
 ) -> bytes:
+    """Download URL resource to the given file object with progress bar."""
     digest = hashlib.sha256(usedforsecurity=False)
 
     response: http.client.HTTPResponse
@@ -117,18 +129,18 @@ def _download_url(
         bar.reset(total_size)
 
         while chunk := response.read(chunk_size):
-            chunk_size = len(chunk)
             file.write(chunk)
             # GIL released when chunk size is larger than 2047 bytes.
             digest.update(chunk)
-            bar.update(chunk_size)
+            bar.update(len(chunk))
 
     return digest.digest()
 
 
 def _run_download_datasets(
-    datasets: list[Dataset], data_dir: pathlib.Path, num_workers: int
-) -> None:
+    datasets: list[Dataset], data_dir: pathlib.Path, num_workers: int | None
+) -> list[str]:
+    """Download the given datasets in parallel with stdout progress bars."""
     failures: list[str] = []
     with (
         contextlib.ExitStack() as bar_stack,
@@ -147,6 +159,7 @@ def _run_download_datasets(
                 unit_divisor=1024,
                 leave=True,
             )
+            # TODO: maybe fix bar order reversing on close.
             bar_stack.enter_context(contextlib.closing(bar))
 
             # Ensure destination directory exists.
@@ -176,7 +189,9 @@ def _run_download_datasets(
             # Verify checksum if available.
             if finished_ds.sha256 and digest != finished_ds.sha256:
                 finished_bar.set_description(
-                    f"{finished_ds.identifier}: WARNING! failed checksum - expected {finished_ds.sha256.hex()[:8]}, got {digest.hex()[:8]}"
+                    f"{finished_ds.identifier}: WARNING! failed checksum -"
+                    f" expected {finished_ds.sha256.hex()[:8]},"
+                    f" got {digest.hex()[:8]}"
                 )
                 finished_bar.refresh()
                 failures.append(finished_ds.identifier)
@@ -185,42 +200,46 @@ def _run_download_datasets(
             finished_bar.set_description(f"{finished_ds.identifier} (done)")
             finished_bar.refresh()
 
-    print("Finished downloads")
+    return failures
 
-    if failures:
-        print(f"ERROR! {len(failures)} download(s) were unsuccessful: {failures}")
-        sys.exit(1)
-    print(f"All {len(datasets)} downloads were successful.")
+
+def _display_datasets(datasets: Iterable[Dataset], data_dir: pathlib.Path) -> None:
+    """Display the given datasets to stdout."""
+    for ds in datasets:
+        exists = data_dir.joinpath(ds.destination).exists()
+        print(f" - {ds.identifier} ({'*' if exists else ' '}): {ds.url}")
 
 
 def _prompt_confirmation(prompt: str, ok_set: Collection[str]) -> bool:
+    """Prompt the user and return True if the response is found in the ok_set."""
     response = input(prompt)
     return response.strip() in ok_set
 
 
 def main(cli_args: list[str]) -> None:
+    """CLI entrypoint."""
     parser = _make_parser()
     args = parser.parse_args(cli_args)
 
+    # Resolve data directory.
     data_dir = args.data_dir
     if data_dir is None:
         data_dir = _find_project_root(pathlib.Path.cwd()).joinpath("Data")
-
-    if not data_dir.exists():
-        data_dir.mkdir(parents=False, exist_ok=True)
-
+    data_dir.mkdir(parents=False, exist_ok=True)
     print(f"Data directory: {data_dir}")
 
+    # Resolve number of workers.
     num_workers = args.max_jobs
-    if num_workers is None or num_workers < -1:
-        num_workers = 8
+    if num_workers is not None and num_workers < -1:
+        num_workers = None  # use ThreadPoolExecutor default
 
+    # Handle --list
     if args.list:
-        print("Available datasets:")
-        for ds in DATASETS:
-            print(f" - {ds.identifier}: {ds.url}")
+        print("Available datasets (* if already downloaded):")
+        _display_datasets(DATASETS, data_dir)
         return
 
+    # Handle --download
     if args.download:
         print(f"Filter: {args.download}")
 
@@ -228,9 +247,11 @@ def main(cli_args: list[str]) -> None:
             ds for ds in DATASETS if fnmatch.fnmatch(ds.identifier, args.download)
         ]
 
-        print(f"Selected {len(requested_datesets)}/{len(DATASETS)} dataset:")
-        for ds in DATASETS:
-            print(f" - {ds.identifier}: {ds.url}")
+        print(
+            f"Selected {len(requested_datesets)}/{len(DATASETS)}"
+            f" datasets (* if already downloaded):"
+        )
+        _display_datasets(requested_datesets, data_dir)
 
         if not (
             args.yes
@@ -242,8 +263,12 @@ def main(cli_args: list[str]) -> None:
             return
 
         print("Downloading...")
-        _run_download_datasets(requested_datesets, data_dir, num_workers)
-
+        failures = _run_download_datasets(requested_datesets, data_dir, num_workers)
+        print("Finished downloads")
+        if failures:
+            print(f"ERROR! {len(failures)} download(s) were unsuccessful: {failures}")
+            sys.exit(1)
+        print(f"All {len(requested_datesets)} downloads were successful.")
         return
 
     # No action was specified.
