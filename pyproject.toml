@@ -67,8 +67,6 @@ select = [
     "UP",
     # flake8-2020
     "YTT",
-    # flake8-annotations
-    "ANN",
     # flake-8-blind-except
     "BLE",
     # flake8-boolean-trap
