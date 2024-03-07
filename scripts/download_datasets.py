@@ -14,15 +14,17 @@ import concurrent.futures
 import contextlib
 import fnmatch
 import hashlib
-import http.client
 import pathlib
 import sys
 import urllib.request
-from collections.abc import Collection
 from dataclasses import dataclass
-from typing import BinaryIO, Final, Iterable, NoReturn
+from typing import TYPE_CHECKING, BinaryIO, Final, NoReturn
 
 import tqdm
+
+if TYPE_CHECKING:
+    import http.client
+    from collections.abc import Collection, Iterable
 
 
 @dataclass
@@ -80,7 +82,8 @@ def _make_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--data-dir",
         type=pathlib.Path,
-        help="Directory to store datasets to. Defaults to the 'Data' directory in the project root.",
+        help="Directory to store datasets to. Defaults to the 'Data' directory"
+        " in the project root.",
     )
     parser.add_argument(
         "--max-jobs", type=int, help="Maximum number of concurrent download jobs."
@@ -180,7 +183,7 @@ def _run_download_datasets(
             finished_ds, finished_bar = future_to_dataset[future]
             try:
                 digest = future.result()
-            except Exception as ex:
+            except Exception as ex:  # noqa: BLE001
                 finished_bar.set_description(f"{finished_ds.identifier}: ERROR! {ex}")
                 finished_bar.refresh()
                 failures.append(finished_ds.identifier)
