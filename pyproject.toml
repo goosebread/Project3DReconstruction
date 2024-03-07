@@ -48,6 +48,7 @@ strict = true
 line-length = 88  # match black
 target-version = "py312"
 fix = true
+extend-include = ["*.ipynb"]
 
 # ruff lint settings.
 [tool.ruff.lint]
@@ -104,7 +105,7 @@ select = [
     "TCH",
     # flake8-unused-arguments
     "ARG",
-    # lake8-use-pathlib
+    # flake8-use-pathlib
     "PTH",
     # pylint
     "PL",
@@ -116,4 +117,9 @@ select = [
     "PERF",
     # Ruff-specific rules
     "RUF",
+]
+
+unfixable = [
+    # Unused noqa
+    "RUF100",
 ]
