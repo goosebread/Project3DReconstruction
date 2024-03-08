@@ -24,7 +24,7 @@ jobs:
         # language=sh
         run: |
           python -m pip install --upgrade pip
-          python -m pip install . pytest
+          python -m pip install . pytest pytest-github-actions-annotate-failures
 
       - name: Run pytest
         # language=sh
