@@ -3,10 +3,16 @@ Tools for working 3D plots in `matplotlib`.
 """
 # Useful references:
 # - https://matplotlib.org/stable/users/explain/artists/transforms_tutorial.html
+# - https://stackoverflow.com/q/7821518/
+# - https://stackoverflow.com/q/63027743/
+# - https://stackoverflow.com/q/59794014/
+# - https://stackoverflow.com/q/13662525/
+# - https://stackoverflow.com/q/10389089/
 
 from __future__ import annotations
 
 import io
+import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -59,12 +65,21 @@ def axes_coords_3d2display(
             f"coordinates must be an Nx3 array, got shape {coordinates.shape}"
         )
 
+    # TODO: determine how to correct the transformation for axes with a title.
+    if axes.get_title():
+        warnings.warn(
+            f"{axes_coords_3d2display.__name__} is known to produce incorrect results"
+            f" when an axes has a non-empty title",
+            stacklevel=2,
+        )
+
     # TODO: determine how to correct the transformation for non-square canvases.
     fig_dims = axes.figure.canvas.get_width_height()
     if fig_dims[0] != fig_dims[1]:
-        raise ValueError(
-            f"figures with unequal height and width are not yet supported"
-            f" - got size {fig_dims}"
+        warnings.warn(
+            f"{axes_coords_3d2display.__name__} is known to produce incorrect results"
+            f" the figure's canvas has unequal height and width (got size {fig_dims})",
+            stacklevel=2,
         )
 
     proj = axes.get_proj()
