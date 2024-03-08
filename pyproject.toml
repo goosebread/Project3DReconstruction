@@ -46,6 +46,10 @@ profile = "black"
 strict = true
 plugins = ["numpy.typing.mypy_plugin"]
 
+[[tool.mypy.overrides]]
+module = ["matplotlib.*", "mpl_toolkits.*"]
+ignore_missing_imports = true
+
 # pytest config
 [tool.pytest.ini_options]
 addopts = "--doctest-modules"
