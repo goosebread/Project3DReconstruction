@@ -10,7 +10,8 @@ authors = [
 # TODO: reorganize into single package?
 packages = [
     { from = ".", include = "Algorithm" },
-    { from = ".", include = "Evalation" },
+#    { from = ".", include = "Evalation" },
+    { from = "src", include = "project_3d_reconstruction" }  # TODO: simpler package name?
 ]
 readme = "README.md"
 
@@ -49,6 +50,7 @@ line-length = 88  # match black
 target-version = "py312"
 fix = true
 extend-include = ["*.ipynb"]
+src = ["src"]
 
 # ruff lint settings.
 [tool.ruff.lint]

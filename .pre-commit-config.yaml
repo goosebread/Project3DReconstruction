@@ -34,7 +34,7 @@ repos:
         types_or: [ python, pyi ]
         pass_filenames: false
         require_serial: true
-        args: [ -v ]  # no packages yet
+        args: [ --package, project_3d_reconstruction ]
 
   - repo: https://github.com/kynan/nbstripout
     rev: 0.7.1
