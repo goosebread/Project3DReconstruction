@@ -120,4 +120,6 @@ select = [
 unfixable = [
     # Unused noqa
     "RUF100",
+    # Unused import
+    "F401",
 ]
