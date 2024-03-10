@@ -45,6 +45,12 @@ profile = "black"
 [tool.mypy]
 strict = true
 plugins = ["numpy.typing.mypy_plugin"]
+# Controls which files mypy should type-checked when no files are specified on the
+# command line.
+# Specified as files (instead of as a package) so that this works inside the mypy
+# pre-commit hook (where this project won't be installed in the same enviroment that
+# mypy is running in).
+files = ["src"]
 
 [[tool.mypy.overrides]]
 module = ["matplotlib.*", "mpl_toolkits.*"]

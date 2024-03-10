@@ -18,23 +18,20 @@ repos:
       - id: ruff-format
         types_or: [ python, pyi, jupyter ]
 
-  # We want to run mypy against the installed import packages for this project
-  # (i.e. as 'mypy -p [name]'). Using a local hook ensures that this project is
-  # installed in the environment that mypy is run in.
-  # References:
-  # - https://github.com/pre-commit/mirrors-mypy
-  # - https://jaredkhan.com/blog/mypy-pre-commit
-  - repo: local
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.9.0
     hooks:
       - id: mypy
-        name: mypy
-        entry: mypy
-        language: python
-        additional_dependencies: [ "mypy==1.8.0" ]
-        types_or: [ python, pyi ]
+        # Run on whole project, not just updated files.
+        # See pyproject.toml config for which files mypy will type check.
         pass_filenames: false
-        require_serial: true
-        args: [ --package, project_3d_reconstruction ]
+        # This hook runs in an isolated environment.
+        # All dependencies that mypy needs to analyze during type checking should
+        # be re-specified here.
+        additional_dependencies: [ numpy ]
+        # Override the default args, which includes --ignore-missing-imports
+        args: [ ]
+
 
   - repo: https://github.com/kynan/nbstripout
     rev: 0.7.1
