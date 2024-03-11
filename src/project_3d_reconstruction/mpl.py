@@ -16,6 +16,7 @@ import warnings
 from typing import TYPE_CHECKING
 
 import numpy as np
+from mpl_toolkits.mplot3d import proj3d
 
 from project_3d_reconstruction import homography
 
@@ -36,6 +37,65 @@ def fig_export_rgba(fig: Figure) -> npt.NDArray[np.uint8]:
 
     image_data = np.frombuffer(buffer.getbuffer(), dtype=np.uint8)
     return image_data.reshape((*fig.canvas.get_width_height()[::-1], 4))
+
+
+def axes_eye_coordinate(axes: Axes3D) -> npt.NDArray[np.float64]:
+    """
+    Return the given axes' eye/camera position in world coordinates.
+
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    >>> ax.view_init(azim=0, elev=0)  # Camera pointing in -x direction
+    >>> eye = axes_eye_coordinate(ax)
+    >>> np.testing.assert_allclose(eye, [9.25, 0.5, 0.5])
+    """
+    # Based on matplotlib internals (as of 3.8.3). May break in future versions.
+    # See `mpl_toolkits.mplot3d.Axes3D.get_proj` and functions called therein.
+    # https://github.com/matplotlib/matplotlib/blob/9a607294/lib/mpl_toolkits/mplot3d/axes3d.py#L1197
+
+    box_aspect = axes._roll_to_vertical(axes._box_aspect)
+
+    # Projective transform from world coordinates to view box relative coordinates.
+    world_transform = proj3d.world_transformation(
+        *axes.get_xlim3d(),
+        *axes.get_ylim3d(),
+        *axes.get_zlim3d(),
+        pb_aspect=box_aspect,
+    )
+
+    # Coordinates of the center of the view box. Called "R" in mpl code.
+    box_center = 0.5 * box_aspect
+
+    # Eye/camera position in view box coordinates.
+    eye = box_center + axes._dist * axes_eye_direction(axes)
+
+    # Convert from view box to world coordinates.
+    # TODO: replace with more stable implementation that direct inversion.
+    return homography.projective_transform(eye, np.linalg.inv(world_transform))
+
+
+def axes_eye_direction(axes: Axes3D) -> npt.NDArray[np.float64]:
+    """
+    Return a unit vector pointing towards the eye position.
+
+    >>> import matplotlib.pyplot as plt
+    >>> fig, ax = plt.subplots(subplot_kw={"projection": "3d"})
+    >>> ax.view_init(azim=0, elev=0)  # Camera pointing in -x direction
+    >>> axes_eye_direction(ax)
+    array([1., 0., 0.])
+    >>> ax.view_init(azim=45, elev=45)
+    >>> axes_eye_direction(ax)
+    array([0.5       , 0.5       , 0.7071...])
+    """
+    elev_rad = np.deg2rad(axes.elev)
+    azim_rad = np.deg2rad(axes.azim)
+    return axes._roll_to_vertical(  # type: ignore
+        [
+            np.cos(elev_rad) * np.cos(azim_rad),
+            np.cos(elev_rad) * np.sin(azim_rad),
+            np.sin(elev_rad),
+        ]
+    )
 
 
 def axes_coords_data2display(

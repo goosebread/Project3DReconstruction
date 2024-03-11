@@ -16,7 +16,7 @@ def projective_transform(
     x: npt.ArrayLike, transform: npt.ArrayLike
 ) -> npt.NDArray[Any]:
     """
-    Apply a project transform to heterogeneous/non-homogenous coordinates.
+    Apply a projective transform to heterogeneous/non-homogenous coordinates.
 
     Parameters
     ----------
