@@ -50,7 +50,7 @@ plugins = ["numpy.typing.mypy_plugin"]
 # Specified as files (instead of as a package) so that this works inside the mypy
 # pre-commit hook (where this project won't be installed in the same enviroment that
 # mypy is running in).
-files = ["src"]
+files = ["src", "scripts"]
 
 [[tool.mypy.overrides]]
 module = ["matplotlib.*", "mpl_toolkits.*"]

@@ -28,4 +28,4 @@ jobs:
 
       - name: Run pytest
         # language=sh
-        run: python -m pytest -vvs
+        run: python -m pytest -vvs --color=yes
