@@ -26,6 +26,7 @@ black = { extras = ["jupyter"], version = "^24.2.0" }
 isort = "^5.13.2"
 mypy = "^1.8.0"
 pre-commit = "^3.6.2"
+ruff = "^0.3.3"
 pytest = "^8.0.2"
 
 [tool.poetry.group.nb.dependencies]
