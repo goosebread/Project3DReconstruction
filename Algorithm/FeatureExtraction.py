@@ -56,4 +56,37 @@ def outlierRemover(matches):
     #use RANSAC
     #use 8 point correspondances to estimate a fundamental matrix
     #need some sort of match score for each fundamental matrix
-    
+    pass
+
+#https://ieeexplore.ieee.org/document/5204091
+def opponentSIFT(img):
+    #Step 1 convert to opponent color space
+    #TODO optimize
+    B = img[:,:,0]
+    G = img[:,:,1]
+    R = img[:,:,2]
+
+    O1 = np.divide((R-G),np.sqrt(2))
+    O2 = np.divide((R+G-2*B),np.sqrt(6))
+    O3 = np.divide((R+G+B),np.sqrt(3))
+    cv.imwrite('sift_keypointsO1.jpg',np.uint8(O1))
+    cv.imwrite('sift_keypointsO2.jpg',np.uint8(O2))
+    cv.imwrite('sift_keypointsO3.jpg',np.uint8(O3))
+
+    #Step 2 use Harris-Laplace point detector on intensity channel (o3)
+    #TODO use a real point detector or figure out what parameters to use with cv SIFT
+    #use this space to specify additional parameters
+    sift = cv.SIFT_create(nfeatures=1000)
+    #sift = cv.SIFT_create(nfeatures=1000, nOctaveLayers=3, sigma=10)
+
+    kp = sift.detect(np.uint8(O3),None)
+
+    #Step 3 compute descriptors for each opponent channel
+    _,des1 = sift.compute(np.uint8(O1),kp)
+    _,des2 = sift.compute(np.uint8(O2),kp)
+    _,des3 = sift.compute(np.uint8(O3),kp)
+
+    #combine into one large descriptor
+    des = np.concatenate((des1,des2,des3),axis=1)
+
+    return kp, des
