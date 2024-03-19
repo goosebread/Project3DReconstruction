@@ -28,8 +28,12 @@ class RenderHelper(object):
         mesh = pyrender.Mesh.from_trimesh(trimesh_object, smooth=False)
         self.scene.add(mesh, pose=pose)
 
-    def addSphere(self, radius, pose):
-        sphere = trimesh.creation.icosphere(subdivisions=4, radius=radius)
+    def addSphere(self, radius, pose, noise=0.0):
+        sphere = trimesh.creation.icosphere(subdivisions=5, radius=radius)
+
+        if noise > 0:
+            sphere.vertices += noise * np.random.randn(*sphere.vertices.shape)
+
         self.addFromTrimesh(sphere, pose)
 
     def render(self, show_image=False, image_filename=None):
@@ -46,8 +50,18 @@ class RenderHelper(object):
         return color
 
 
+def randomTransform(scale=1):
+    T = np.eye(4)
+    T[0:3, 3] = np.random.uniform(-1, 1, 3) * scale
+
+    return T
+
+
 # This just re-does the test script
 if __name__ == '__main__':
     renderer = RenderHelper()
-    renderer.addSphere(0.8, np.eye(4))
+
+    for i in range(10):
+        renderer.addSphere(np.random.uniform(0.1, 0.4), randomTransform(1), noise=0.001)
+
     renderer.render(show_image=True)

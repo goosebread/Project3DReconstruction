@@ -10,6 +10,7 @@ import cv2
 
 def main():
     sphere = trimesh.creation.icosphere(subdivisions=4, radius=0.8)
+    sphere.vertices += 1e-2 * np.random.randn(*sphere.vertices.shape)
     mesh = pyrender.Mesh.from_trimesh(sphere, smooth=False)
 
     # compose scene
