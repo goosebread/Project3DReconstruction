@@ -9,8 +9,6 @@ authors = [
 ]
 # TODO: reorganize into single package?
 packages = [
-    { from = ".", include = "Algorithm" },
-#    { from = ".", include = "Evalation" },
     { from = "src", include = "project_3d_reconstruction" }  # TODO: simpler package name?
 ]
 readme = "README.md"
@@ -20,6 +18,8 @@ python = "^3.10"
 opencv-python = "^4.9.0.80"
 tqdm = "^4.66.2"
 matplotlib = "^3.8.3"
+pyrender = "^0.1.45"
+trimesh = "^4.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = { extras = ["jupyter"], version = "^24.2.0" }

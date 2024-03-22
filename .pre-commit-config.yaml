@@ -28,7 +28,7 @@ repos:
         # This hook runs in an isolated environment.
         # All dependencies that mypy needs to analyze during type checking should
         # be re-specified here.
-        additional_dependencies: [ numpy, types-tqdm ]
+        additional_dependencies: [ numpy, types-tqdm, opencv-python, pyrender, trimesh ]
         # Override the default args, which includes --ignore-missing-imports
         args: [ ]
 
