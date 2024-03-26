@@ -15,7 +15,7 @@ def randomTransform(scale=1.0):
     return T
 
 
-def simpleTransform(x, y, z):
+def positionOnly(x, y, z):
     T = np.eye(4)
     T[0:3, 3] = [x, y, z]
     return T
@@ -98,12 +98,12 @@ def makeTestScene2():
     """
 
     renderer = RenderHelper()
-    renderer.addCube(0.5, simpleTransform(-0.5, -0.5, -0.5))
+    renderer.addCube(0.5, positionOnly(-0.5, -0.5, -0.5))
 
     for i in [-0.2, 0, 0.2]:
-        renderer.addCube(0.3, simpleTransform(i, i, i))
+        renderer.addCube(0.3, positionOnly(i, i, i))
 
-    renderer.addCube(0.5, simpleTransform(0.5, 0.5, 0.5))
+    renderer.addCube(0.5, positionOnly(0.5, 0.5, 0.5))
 
     # Render two views
     renderer.moveCamera(pointingAtOrigin(-0.1, 2))
