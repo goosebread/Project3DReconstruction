@@ -21,12 +21,12 @@ def simpleTransform(x, y, z):
     return T
 
 
-def initialCameraPose():
-    c = 2 ** -0.5
+def pointingAtOrigin(x, r):
+    c = r ** -0.5
 
-    return [[1, 0, 0, 0],
-            [0, c, -c, -2],
-            [0, c, c, 2],
+    return [[1, 0, 0, x],
+            [0, c, -c, -r],
+            [0, c, c, r],
             [0, 0, 0, 1]]
 
 
@@ -41,7 +41,7 @@ class RenderHelper(object):
         light = pyrender.DirectionalLight(color=[1, 1, 1], intensity=2e3)
         self.scene.add(light, pose=np.eye(4))
 
-        self.moveCamera(initialCameraPose())
+        self.moveCamera(pointingAtOrigin(0, 2))
 
     def moveCamera(self, pose):
         if self.cameraNode is not None:
@@ -106,9 +106,9 @@ def makeTestScene2():
     renderer.addCube(0.5, simpleTransform(0.5, 0.5, 0.5))
 
     # Render two views
-    renderer.moveCamera(simpleTransform(0.1, 0, 2))
+    renderer.moveCamera(pointingAtOrigin(-0.1, 2))
     renderer.render(show_image=True)
-    renderer.moveCamera(simpleTransform(-0.1, 0, 2))
+    renderer.moveCamera(pointingAtOrigin(0.1, 2))
     renderer.render(show_image=True)
 
 
