@@ -61,8 +61,13 @@ class RenderHelper(object):
 
         self.addFromTrimesh(sphere, pose)
 
-    def addCube(self, size, pose):
-        cube = trimesh.creation.box(extents=[size, size, size])
+    def addCube(self, size, pose, color=None):
+        if color is None:
+            color = [255, 255, 255]
+
+        # color = np.random.randint(0, 255, (12, 3))
+
+        cube = trimesh.creation.box(extents=[size, size, size], face_colors=color)
         self.addFromTrimesh(cube, pose)
 
     def render(self, show_image=False, image_filename=None):
@@ -98,12 +103,12 @@ def makeTestScene2():
     """
 
     renderer = RenderHelper()
-    renderer.addCube(0.5, positionOnly(-0.5, -0.5, -0.5))
+    renderer.addCube(0.5, positionOnly(-0.5, -0.5, -0.5), color=[255, 0, 0])
 
     for i in [-0.2, 0, 0.2]:
-        renderer.addCube(0.3, positionOnly(i, i, i))
+        renderer.addCube(0.3, positionOnly(i, i, i), color=[0, 255, 0])
 
-    renderer.addCube(0.5, positionOnly(0.5, 0.5, 0.5))
+    renderer.addCube(0.5, positionOnly(0.5, 0.5, 0.5), color=[0, 0, 255])
 
     # Render two views
     renderer.moveCamera(pointingAtOrigin(-0.1, 2))
