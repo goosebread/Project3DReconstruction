@@ -47,7 +47,7 @@ class RenderHelper(object):
         if self.cameraNode is not None:
             self.scene.remove_node(self.cameraNode)
 
-        self.cameraNode = self.scene.add(pyrender.PerspectiveCamera(yfov=np.pi / 3.0), pose=pose)
+        self.cameraNode = self.scene.add(pyrender.IntrinsicsCamera(fx=512, fy=512, cx=256, cy=256), pose=pose)
 
     def addFromTrimesh(self, trimesh_object, pose):
         mesh = pyrender.Mesh.from_trimesh(trimesh_object, smooth=False)
@@ -112,9 +112,9 @@ def makeTestScene2():
 
     # Render two views
     renderer.moveCamera(pointingAtOrigin(-0.1, 2))
-    renderer.render(show_image=True)
+    renderer.render(show_image=True, image_filename="test1.png")
     renderer.moveCamera(pointingAtOrigin(0.1, 2))
-    renderer.render(show_image=True)
+    renderer.render(show_image=True, image_filename="test2.png")
 
 
 if __name__ == '__main__':
