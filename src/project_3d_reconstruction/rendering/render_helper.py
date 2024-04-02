@@ -1,7 +1,8 @@
 """
 Class to automate some of the pyrender-trimesh stuff
 """
-
+import os.path
+import random
 import numpy as np
 import pyrender
 import trimesh
@@ -43,11 +44,20 @@ class RenderHelper(object):
 
         self.moveCamera(pointingAtOrigin(0, 2))
 
+        self.meshDict = {}
+
     def moveCamera(self, pose):
         if self.cameraNode is not None:
             self.scene.remove_node(self.cameraNode)
 
         self.cameraNode = self.scene.add(pyrender.IntrinsicsCamera(fx=512, fy=512, cx=256, cy=256), pose=pose)
+
+    def loadFromPath(self, file_path, dict_key):
+        mesh = trimesh.load(file_path, force='mesh')
+        self.meshDict[dict_key] = mesh
+
+    def addFromMeshDict(self, dict_key, pose):
+        self.addFromTrimesh(self.meshDict[dict_key], pose)
 
     def addFromTrimesh(self, trimesh_object, pose):
         mesh = pyrender.Mesh.from_trimesh(trimesh_object, smooth=False)
@@ -117,5 +127,41 @@ def makeTestScene2():
     renderer.render(show_image=True, image_filename="test2.png")
 
 
+FILE_PATH = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "..", "mesh_files"))
+OBJECTS = [os.path.join(FILE_PATH, "coral_2", "untitled.dae"),
+           os.path.join(FILE_PATH, "coral_4", "untitled.dae"),
+           os.path.join(FILE_PATH, "rock_1", "untitled.dae"),
+           os.path.join(FILE_PATH, "braincoral_1", "untitled.dae"),
+           ]
+
+
+def makeTestScene3():
+    renderer = RenderHelper()
+
+    # Load in mesh files
+    names = []
+    for file_path in OBJECTS:
+        print(f"Loading {file_path}")
+        name = file_path.split("/")[-2]
+        names.append(name)
+        renderer.loadFromPath(file_path, name)
+    print("Done loading")
+
+    # Place them in the world
+    for i in range(30):
+        object_name = random.choice(names)
+        renderer.addFromMeshDict(object_name, randomTransform(1))
+
+    # Add some cubes
+    for i in range(10):
+        renderer.addCube(np.random.uniform(0.1, 0.4), randomTransform(1), color=np.random.randint(0, 180, 3))
+
+    # Render two views
+    renderer.moveCamera(pointingAtOrigin(-0.05, 2))
+    renderer.render(show_image=True, image_filename="test1.png")
+    renderer.moveCamera(pointingAtOrigin(0.05, 2))
+    renderer.render(show_image=True, image_filename="test2.png")
+
+
 if __name__ == '__main__':
-    makeTestScene2()
+    makeTestScene3()
