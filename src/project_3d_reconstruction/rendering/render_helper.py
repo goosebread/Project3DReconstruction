@@ -24,7 +24,8 @@ def positionOnly(x, y, z):
 
 def pointingAtOrigin(x, r):
     c = r ** -0.5
-
+    #???
+    #invalid rotations for c!=2
     return [[1, 0, 0, x],
             [0, c, -c, -r],
             [0, c, c, r],
@@ -50,7 +51,7 @@ class RenderHelper(object):
         if self.cameraNode is not None:
             self.scene.remove_node(self.cameraNode)
 
-        self.cameraNode = self.scene.add(pyrender.IntrinsicsCamera(fx=512, fy=512, cx=256, cy=256), pose=pose)
+        self.cameraNode = self.scene.add(pyrender.IntrinsicsCamera(fx=2048, fy=2048, cx=1024, cy=1024), pose=pose)
 
     def loadFromPath(self, file_path, dict_key):
         mesh = trimesh.load(file_path, force='mesh')
@@ -81,7 +82,7 @@ class RenderHelper(object):
         self.addFromTrimesh(cube, pose)
 
     def render(self, show_image=False, image_filename=None):
-        r = pyrender.OffscreenRenderer(512, 512)
+        r = pyrender.OffscreenRenderer(2048, 2048)
         color, _ = r.render(self.scene)
         r.delete()
 
@@ -142,7 +143,7 @@ def makeTestScene3():
     names = []
     for file_path in OBJECTS:
         print(f"Loading {file_path}")
-        name = file_path.split("/")[-2]
+        name = file_path.split("\\")[-2]#warning slash is different for linux vs windows
         names.append(name)
         renderer.loadFromPath(file_path, name)
     print("Done loading")
