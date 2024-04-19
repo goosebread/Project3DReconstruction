@@ -48,7 +48,7 @@ DATASETS: Final = [
     # From https://www.maths.lth.se/matematiklth/personal/calle/dataset/dataset.html
     Dataset(
         identifier="lund-statlib-images",
-        destination="Datasets/lund/StatueOfLiberty/StatLib.zip",
+        destination="lund/StatueOfLiberty/StatLib.zip",
         url="http://vision.maths.lth.se/calledataset/StatLib/StatLib.zip",
         sha256=bytes.fromhex(
             "04caaf7a1b9d972ebee0ae05f0e5bfc4ab60a02c0463ba9d73e6e7e679710793"
@@ -56,7 +56,7 @@ DATASETS: Final = [
     ),
     Dataset(
         identifier="lund-statlib-points",
-        destination="Datasets/lund/StatueOfLiberty/data.mat",
+        destination="lund/StatueOfLiberty/data.mat",
         url="http://vision.maths.lth.se/calledataset/StatLib/data.mat",
         sha256=bytes.fromhex(
             "4c3e196e389f097fc34b7f412eccd8e880c370c5527bad171f885f902cb2dca3"
@@ -227,7 +227,7 @@ def main(cli_args: list[str]) -> None:
     # Resolve data directory.
     data_dir = args.data_dir
     if data_dir is None:
-        data_dir = _find_project_root(pathlib.Path.cwd()).joinpath("Data")
+        data_dir = _find_project_root(pathlib.Path.cwd()).joinpath("data")
     data_dir.mkdir(parents=False, exist_ok=True)
     print(f"Data directory: {data_dir}")
 
