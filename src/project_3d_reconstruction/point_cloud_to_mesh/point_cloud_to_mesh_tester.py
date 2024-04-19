@@ -71,6 +71,15 @@ def extractClusters(pc, distance_threshold=0.1):
     return clusters
 
 
+def pointsToSurface(pc: np.ndarray):
+    points = pv.wrap(pc)
+    surf = points.reconstruct_surface(nbr_sz=5)
+    surf = surf.clean()
+    surf = surf.smooth(n_iter=20)
+
+    return surf
+
+
 def main():
     mesh = generateTrimesh()
     mesh.apply_translation([0, 1.5, 0])
@@ -88,20 +97,13 @@ def main():
     clusters = extractClusters(pc, distance_threshold=0.5)
 
     # Plot it
-    # Yea I know doing two for loops is bad, I'll fix it later
     pl = pv.Plotter(shape=(1, 2))
     pl.add_title("Point Cloud of 3D Surface")
-    for cluster in clusters:
-        points = pv.wrap(cluster)
-        pl.add_mesh(points)
-
+    pl.add_mesh(pc)
     pl.subplot(0, 1)
     pl.add_title("Reconstructed Surface")
     for cluster in clusters:
-        points = pv.wrap(cluster)
-        surf = points.reconstruct_surface(nbr_sz=5)
-        surf = surf.clean()
-        surf = surf.smooth(n_iter=20)
+        surf = pointsToSurface(cluster)
         pl.add_mesh(surf, color=True, show_edges=True)
     pl.show()
 
