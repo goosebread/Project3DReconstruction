@@ -13,7 +13,7 @@ plt.axis('equal')
 
 
 def generateTrimesh():
-    mesh = trimesh.creation.icosphere(subdivisions=5, radius=0.5)
+    mesh = trimesh.creation.icosphere(subdivisions=3, radius=0.5)
     # mesh = trimesh.creation.box(extents=[1, 1, 1] )
 
     return mesh
@@ -38,8 +38,38 @@ def plotMesh(mesh):
     # plt.show()
 
 
-def extractClusters(pc):
-    pass
+def extractClusters(pc, distance_threshold=0.1):
+    """
+    This isn't super efficient, and computation time scales probably well over the square of the point cloud size
+    """
+
+    clusters = []
+
+    while pc.shape[0] > 0:
+        cluster_start = pc[0]
+        pc = np.delete(pc, 0, 0)
+
+        cluster = cluster_start.copy()
+        cluster = np.expand_dims(cluster, 0)
+
+        queue = [cluster_start]
+
+        while len(queue) > 0:
+            start_point = queue.pop(0)
+            point = np.expand_dims(start_point, 0)
+            cluster = np.append(cluster, point, axis=0)
+
+            delta = pc - start_point
+            distance = np.linalg.norm(delta, axis=1)
+            close_enough = np.where(distance < distance_threshold)[0]
+            for index in close_enough:
+                queue.append(pc[index])
+            pc = np.delete(pc, close_enough, 0)
+
+        clusters.append(cluster)
+
+    return clusters
+
 
 def main():
     mesh = generateTrimesh()
@@ -54,23 +84,26 @@ def main():
     pc3 = generatePointCloud(mesh3, noise=0.0)
     pc = np.concatenate((pc2, pc1, pc3))
 
-    points = pv.wrap(pc)
-    surf = points.reconstruct_surface(nbr_sz=5)
-    surf = surf.clean()
-    surf = surf.smooth(n_iter=20)
+    # Extract clusters
+    clusters = extractClusters(pc, distance_threshold=0.5)
 
-    # points = pv.PolyData(pc)
-    # surf = points.delaunay_3d()
-
+    # Plot it
+    # Yea I know doing two for loops is bad, I'll fix it later
     pl = pv.Plotter(shape=(1, 2))
-    pl.add_mesh(points)
     pl.add_title("Point Cloud of 3D Surface")
-    pl.subplot(0, 1)
-    pl.add_mesh(surf, color=True, show_edges=True)
-    pl.add_title("Reconstructed Surface")
-    pl.show()
+    for cluster in clusters:
+        points = pv.wrap(cluster)
+        pl.add_mesh(points)
 
-    plt.show()
+    pl.subplot(0, 1)
+    pl.add_title("Reconstructed Surface")
+    for cluster in clusters:
+        points = pv.wrap(cluster)
+        surf = points.reconstruct_surface(nbr_sz=5)
+        surf = surf.clean()
+        surf = surf.smooth(n_iter=20)
+        pl.add_mesh(surf, color=True, show_edges=True)
+    pl.show()
 
 
 if __name__ == '__main__':
