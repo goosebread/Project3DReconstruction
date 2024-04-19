@@ -1,12 +1,14 @@
 """
 Class to automate some of the pyrender-trimesh stuff
 """
+
 import os.path
 import random
+
+import cv2
 import numpy as np
 import pyrender
 import trimesh
-import cv2
 
 
 def randomTransform(scale=1.0):
@@ -23,19 +25,21 @@ def positionOnly(x, y, z):
 
 
 def pointingAtOrigin(x, r):
-    c = r ** -0.5
-    #???
-    #invalid rotations for c!=2
-    return [[1, 0, 0, x],
-            [0, c, -c, -r],
-            [0, c, c, r],
-            [0, 0, 0, 1]]
+    c = r**-0.5
+    # ???
+    # invalid rotations for c!=2
+    return [[1, 0, 0, x], [0, c, -c, -r], [0, c, c, r], [0, 0, 0, 1]]
+def pointingAtOrigin2(x, r):
+    c = 2**-0.5
+    # ???
+    # invalid rotations for c!=2
+    return [[1, 0, 0, x], [0, c, -c, -r], [0, c, c, r], [0, 0, 0, 1]]
 
 
-class RenderHelper(object):
+class RenderHelper:
     def __init__(self):
         # Initialize scene
-        self.scene = pyrender.Scene(ambient_light=[.1, .1, .3], bg_color=[0, 0, 0])
+        self.scene = pyrender.Scene(ambient_light=[0.1, 0.1, 0.3], bg_color=[0, 0, 0])
 
         self.cameraNode = None
 
@@ -51,10 +55,12 @@ class RenderHelper(object):
         if self.cameraNode is not None:
             self.scene.remove_node(self.cameraNode)
 
-        self.cameraNode = self.scene.add(pyrender.IntrinsicsCamera(fx=2048, fy=2048, cx=1024, cy=1024), pose=pose)
+        self.cameraNode = self.scene.add(
+            pyrender.IntrinsicsCamera(fx=2048, fy=2048, cx=1024, cy=1024), pose=pose
+        )
 
     def loadFromPath(self, file_path, dict_key):
-        mesh = trimesh.load(file_path, force='mesh')
+        mesh = trimesh.load(file_path, force="mesh")
         self.meshDict[dict_key] = mesh
 
     def addFromMeshDict(self, dict_key, pose):
@@ -103,7 +109,11 @@ def makeTestScene1():
         renderer.addCube(np.random.uniform(0.1, 0.4), randomTransform(1))
 
     for i in range(5):
-        renderer.addSphere(np.random.uniform(0.1, 0.4), randomTransform(1), noise=np.random.uniform(0.00001, 0.001))
+        renderer.addSphere(
+            np.random.uniform(0.1, 0.4),
+            randomTransform(1),
+            noise=np.random.uniform(0.00001, 0.001),
+        )
 
     renderer.render(show_image=True)
 
@@ -128,12 +138,15 @@ def makeTestScene2():
     renderer.render(show_image=True, image_filename="test2.png")
 
 
-FILE_PATH = os.path.abspath(os.path.join(os.path.abspath(__file__), "..", "..", "..", "..", "mesh_files"))
-OBJECTS = [os.path.join(FILE_PATH, "coral_2", "untitled.dae"),
-           os.path.join(FILE_PATH, "coral_4", "untitled.dae"),
-           os.path.join(FILE_PATH, "rock_1", "untitled.dae"),
-           os.path.join(FILE_PATH, "braincoral_1", "untitled.dae"),
-           ]
+FILE_PATH = os.path.abspath(
+    os.path.join(os.path.abspath(__file__), "..", "..", "..", "..", "mesh_files")
+)
+OBJECTS = [
+    os.path.join(FILE_PATH, "coral_2", "untitled.dae"),
+    os.path.join(FILE_PATH, "coral_4", "untitled.dae"),
+    os.path.join(FILE_PATH, "rock_1", "untitled.dae"),
+    os.path.join(FILE_PATH, "braincoral_1", "untitled.dae"),
+]
 
 
 def makeTestScene3():
@@ -143,7 +156,9 @@ def makeTestScene3():
     names = []
     for file_path in OBJECTS:
         print(f"Loading {file_path}")
-        name = file_path.split("\\")[-2]#warning slash is different for linux vs windows
+        name = file_path.split("\\")[
+            -2
+        ]  # warning slash is different for linux vs windows
         names.append(name)
         renderer.loadFromPath(file_path, name)
     print("Done loading")
@@ -155,7 +170,11 @@ def makeTestScene3():
 
     # Add some cubes
     for i in range(10):
-        renderer.addCube(np.random.uniform(0.1, 0.4), randomTransform(1), color=np.random.randint(0, 180, 3))
+        renderer.addCube(
+            np.random.uniform(0.1, 0.4),
+            randomTransform(1),
+            color=np.random.randint(0, 180, 3),
+        )
 
     # Render two views
     renderer.moveCamera(pointingAtOrigin(-0.05, 2))
@@ -164,5 +183,5 @@ def makeTestScene3():
     renderer.render(show_image=True, image_filename="test2.png")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     makeTestScene3()
