@@ -1,8 +1,15 @@
 """
 Test code
 """
-import numpy as np
 
+import os
+
+if os.getlogin() == "nathan":
+    # THIS IS A SUPER HACK BECAUSE I HAVE BLENDER INSTALLED WEIRDLY
+    path = os.environ.get("PATH", "")
+    os.environ["PATH"] = path + ":/home/nathan/blender-3.0.0-linux-x64"
+
+import numpy as np
 import pyvista as pv
 import trimesh
 import matplotlib.pyplot as plt
@@ -96,14 +103,14 @@ def pointsToSurface(pc: np.ndarray):
     points = pv.wrap(pc)
     surf = points.reconstruct_surface(nbr_sz=5)
     surf = surf.clean()
-    surf = surf.smooth(n_iter=1)
+    surf = surf.smooth(n_iter=2)
 
     return surf
 
 
-def clustersToTrimesh(clusters: List[np.ndarray]):
+def clustersToMesh(clusters: List[np.ndarray]):
     """
-    Takes in a list of point cloud clusters and outputs a single trimesh object
+    Takes in a list of point cloud clusters and outputs a single object
     """
 
     mesh_components = []
@@ -112,6 +119,7 @@ def clustersToTrimesh(clusters: List[np.ndarray]):
         surf = pointsToSurface(cluster)
         faces_as_array = surf.faces.reshape((surf.n_faces_strict, 4))[:, 1:]
         mesh = trimesh.Trimesh(surf.points, faces_as_array)
+        trimesh.repair.fix_inversion(mesh)  # Somehow the normals point inwards sometimes
         mesh_components.append(mesh)
 
     return trimesh.util.concatenate(mesh_components)
@@ -126,9 +134,16 @@ def doReconstruction(pc: np.ndarray, distance_threshold=0.5):
     clusters = extractClusters(pc, distance_threshold=distance_threshold)
 
     # Do the mesh reconstruction
-    reconstructed_mesh = clustersToTrimesh(clusters)
+    reconstructed_mesh = clustersToMesh(clusters)
 
     return reconstructed_mesh
+
+
+def intersectionOverUnion(mesh1, mesh2):
+    union = trimesh.boolean.union([mesh1, mesh2], engine="blender")
+    intersection = trimesh.boolean.intersection([mesh1, mesh2], engine="blender")
+
+    return intersection.volume / union.volume
 
 
 def main():
@@ -144,10 +159,14 @@ def main():
     # plotMesh(combined)
 
     # Make point cloud from mesh
-    pc = generatePointCloud(combined, noise=0.01)
+    pc = generatePointCloud(combined, noise=0.03)
 
     # Run reconstruction
     reconstructed_mesh = doReconstruction(pc)
+
+    # Calculate IoU
+    iou = intersectionOverUnion(combined, reconstructed_mesh)
+    print(iou)
 
     # Plot it
     plotMesh(reconstructed_mesh)
