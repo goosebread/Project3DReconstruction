@@ -10,11 +10,11 @@ if os.getlogin() == "nathan":
     os.environ["PATH"] = path + ":/home/nathan/blender-3.0.0-linux-x64"
 
 import numpy as np
-import pyvista as pv
 import trimesh
 import matplotlib.pyplot as plt
 
-from typing import List
+import open3d as o3d
+from point_cloud_to_mesh import doReconstruction, intersectionOverUnion, pointsToMeshOpen3d
 
 
 def generateTrimesh():
@@ -49,103 +49,6 @@ def plotMesh(mesh):
     plt.show()
 
 
-def plotReconstruction(clusters: List[np.ndarray]):
-    """
-    This is the old version
-    """
-
-    pl = pv.Plotter(shape=(1, 2))
-    pl.add_title("Point Cloud of 3D Surface")
-    for cluster in clusters:
-        pl.add_mesh(cluster)
-    pl.subplot(0, 1)
-    pl.add_title("Reconstructed Surface")
-    for cluster in clusters:
-        surf = pointsToSurface(cluster)
-        pl.add_mesh(surf, color=True, show_edges=True)
-    pl.show()
-
-
-def extractClusters(pc, distance_threshold=0.1):
-    """
-    This isn't super efficient, and computation time scales probably well over the square of the point cloud size
-    """
-
-    clusters = []
-
-    while pc.shape[0] > 0:
-        cluster_start = pc[0]
-        pc = np.delete(pc, 0, 0)
-
-        cluster = cluster_start.copy()
-        cluster = np.expand_dims(cluster, 0)
-
-        queue = [cluster_start]
-
-        while len(queue) > 0:
-            start_point = queue.pop(0)
-            point = np.expand_dims(start_point, 0)
-            cluster = np.append(cluster, point, axis=0)
-
-            delta = pc - start_point
-            distance = np.linalg.norm(delta, axis=1)
-            close_enough = np.where(distance < distance_threshold)[0]
-            for index in close_enough:
-                queue.append(pc[index])
-            pc = np.delete(pc, close_enough, 0)
-
-        clusters.append(cluster)
-
-    return clusters
-
-
-def pointsToSurface(pc: np.ndarray):
-    points = pv.wrap(pc)
-    surf = points.reconstruct_surface(nbr_sz=5)
-    surf = surf.clean()
-    surf = surf.smooth(n_iter=2)
-
-    return surf
-
-
-def clustersToMesh(clusters: List[np.ndarray]):
-    """
-    Takes in a list of point cloud clusters and outputs a single object
-    """
-
-    mesh_components = []
-
-    for cluster in clusters:
-        surf = pointsToSurface(cluster)
-        faces_as_array = surf.faces.reshape((surf.n_faces_strict, 4))[:, 1:]
-        mesh = trimesh.Trimesh(surf.points, faces_as_array)
-        trimesh.repair.fix_inversion(mesh)  # Somehow the normals point inwards sometimes
-        mesh_components.append(mesh)
-
-    return trimesh.util.concatenate(mesh_components)
-
-
-def doReconstruction(pc: np.ndarray, distance_threshold=0.5):
-    """
-    The full pipeline
-    """
-
-    # Extract clusters
-    clusters = extractClusters(pc, distance_threshold=distance_threshold)
-
-    # Do the mesh reconstruction
-    reconstructed_mesh = clustersToMesh(clusters)
-
-    return reconstructed_mesh
-
-
-def intersectionOverUnion(mesh1, mesh2, engine=None):
-    union = trimesh.boolean.union([mesh1, mesh2], engine=engine)
-    intersection = trimesh.boolean.intersection([mesh1, mesh2], engine=engine)
-
-    return intersection.volume / union.volume
-
-
 def main():
     # Generate test mesh
     mesh = generateTrimesh()
@@ -170,6 +73,29 @@ def main():
 
     # Plot it
     plotMesh(reconstructed_mesh)
+
+
+def open3dTesting():
+    # Test bunny
+    bunny = o3d.data.BunnyMesh()
+    gt_mesh = o3d.io.read_triangle_mesh(bunny.path)
+    gt_mesh.compute_vertex_normals()
+    pcd = gt_mesh.sample_points_poisson_disk(3000)
+
+    # Test sphere
+    test_mesh = generateTrimesh()
+    pc = generatePointCloud(test_mesh, noise=0.02)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(pc)
+    pcd.estimate_normals()
+    pcd.orient_normals_consistent_tangent_plane(100)
+
+    rec_mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, 0.5)
+    o3d.visualization.draw_geometries([pcd, rec_mesh], point_show_normal=True)
+
+    # mesh = pointsToMeshOpen3d(pc)
+
+    # plotMesh(mesh)
 
 
 if __name__ == '__main__':
