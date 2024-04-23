@@ -1,0 +1,72 @@
+\documentclass[12pt,letterpaper]{article} % twocolumn
+
+\usepackage[left=0.8in, right=0.8in, bottom=1in, top=1in]{geometry}
+\usepackage{expl3}
+\usepackage[dvipsnames,table]{xcolor} % table arg for coloring table cells
+\usepackage{titling}  % Customizing \maketitle
+
+\RequirePackage{hyperref}
+% Color hyperlinks dark blue by default.
+\hypersetup{
+    colorlinks=true,
+    linkcolor=MidnightBlue,
+    citecolor=MidnightBlue,
+    urlcolor=MidnightBlue,
+}
+
+% Set font.
+\usepackage{newtxmath}
+\usepackage{fontspec}
+\setmainfont{Times New Roman}
+\setsansfont{Latin Modern Sans}
+\setmonofont{Inconsolata}
+% Bibliography.
+\usepackage[backend=bibtex,style=ieee]{biblatex} % backend=bibtex
+\addbibresource{EECE5639_Project_Report_McGuire_Schubert_Yeh.bib}
+
+\usepackage{lipsum}
+\usepackage[pagestyles]{titlesec}
+\titlespacing{\section}
+{0pc}{8pt}{4pt}[0pc] % left before after right
+
+\titleformat{\section}[block]
+{\centering\large\bfseries}
+{\thesection.}
+{1ex minus .1ex}
+{\MakeUppercase}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Tweak \maketile layout
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\setlength{\droptitle}{-0.75in}
+
+\DeclareDocumentCommand{\FancyEmail}{ m }{%
+    \colorlet{@savecolor}{.}%
+    \href{mailto:#1}{\color{@savecolor}\ttfamily{}#1}%
+}
+\title{\bfseries{} TODO TITLE}
+\author{
+%    \itshape{}
+    Nathan McGuire \\ \FancyEmail{mcguire.n@northeastern.edu} \and
+%    \itshape{}
+    Brian Schubert \\ \FancyEmail{schubert.b@northeastern.edu}\and
+%    \itshape{}
+    Alex Yeh \\ \FancyEmail{yeh.al@northeastern.edu}
+}
+\date{April 24th, 2024}
+
+\renewcommand{\baselinestretch}{1.25}
+\begin{document}
+\maketitle
+
+\lipsum[0-3]
+
+\nocite{9229407}
+\nocite{DVN/CU4UXG_2021}
+\nocite{Olsson}
+\nocite{shrestha2022real}
+
+\clearpage
+\printbibliography
+
+\end{document}
