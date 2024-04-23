@@ -139,7 +139,7 @@ def doReconstruction(pc: np.ndarray, distance_threshold=0.5):
     return reconstructed_mesh
 
 
-def intersectionOverUnion(mesh1, mesh2, engine="blender"):
+def intersectionOverUnion(mesh1, mesh2, engine=None):
     union = trimesh.boolean.union([mesh1, mesh2], engine=engine)
     intersection = trimesh.boolean.intersection([mesh1, mesh2], engine=engine)
 
