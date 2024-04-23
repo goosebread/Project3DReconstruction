@@ -139,9 +139,9 @@ def doReconstruction(pc: np.ndarray, distance_threshold=0.5):
     return reconstructed_mesh
 
 
-def intersectionOverUnion(mesh1, mesh2):
-    union = trimesh.boolean.union([mesh1, mesh2], engine="blender")
-    intersection = trimesh.boolean.intersection([mesh1, mesh2], engine="blender")
+def intersectionOverUnion(mesh1, mesh2, engine="blender"):
+    union = trimesh.boolean.union([mesh1, mesh2], engine=engine)
+    intersection = trimesh.boolean.intersection([mesh1, mesh2], engine=engine)
 
     return intersection.volume / union.volume
 
@@ -159,7 +159,7 @@ def main():
     # plotMesh(combined)
 
     # Make point cloud from mesh
-    pc = generatePointCloud(combined, noise=0.03)
+    pc = generatePointCloud(combined, noise=0.02)
 
     # Run reconstruction
     reconstructed_mesh = doReconstruction(pc)
