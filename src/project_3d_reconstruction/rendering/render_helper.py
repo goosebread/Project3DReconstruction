@@ -55,13 +55,13 @@ OBJECTS = [
 class RenderHelper:
     def __init__(self):
         # Initialize scene
-        self.scene = pyrender.Scene(ambient_light=[0.1, 0.1, 0.3], bg_color=[0, 0, 0])
+        self.scene = pyrender.Scene(ambient_light=[255,255,255], bg_color=[255,255,255])
 
         self.cameraNode = None
 
         # Hard code light for now
-        light = pyrender.DirectionalLight(color=[1, 1, 1], intensity=2e3)
-        self.scene.add(light, pose=np.eye(4))
+        #light = pyrender.DirectionalLight(color=[1, 1, 1], intensity=2e3)
+        #self.scene.add(light, pose=np.eye(4))
 
         self.moveCamera(pointingAtOrigin(0, 2))
 

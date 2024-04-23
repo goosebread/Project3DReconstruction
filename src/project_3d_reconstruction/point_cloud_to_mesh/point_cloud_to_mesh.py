@@ -56,7 +56,7 @@ def pointsToMeshPyVista(pc: np.ndarray):
     return mesh
 
 
-def pointsToMeshOpen3d(pc: np.ndarray, method=None):
+def pointsToMeshOpen3d(pc: np.ndarray, method=None, alpha=0.5):
     """
     https://www.open3d.org/docs/latest/tutorial/Advanced/surface_reconstruction.html
     """
@@ -71,14 +71,14 @@ def pointsToMeshOpen3d(pc: np.ndarray, method=None):
         radii = [0.001, 0.005, 0.01, 0.05, 0.1, 0.5]  # Can play around with these parameters
         mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_ball_pivoting(pcd, o3d.utility.DoubleVector(radii))
     elif method == "alpha":
-        mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, 0.5)  # Can play around with the alpha (0.5) parameter
+        mesh = o3d.geometry.TriangleMesh.create_from_point_cloud_alpha_shape(pcd, alpha)  # Can play around with the alpha (0.5) parameter
     else:
         mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=pcd, depth=5)  # Can play around with the depth parameter
 
     return trimesh.Trimesh(np.asarray(mesh.vertices), np.asarray(mesh.triangles))
 
 
-def pointsToMesh(pc: np.ndarray, method=None):
+def pointsToMesh(pc: np.ndarray, method=None, alpha=0.5):
     if method is None:
         method = "open3d_poisson"
 
@@ -89,7 +89,7 @@ def pointsToMesh(pc: np.ndarray, method=None):
     elif method == "open3d_ball_pivot":
         return pointsToMeshOpen3d(pc, "ball_pivot")
     elif method == "open3d_alpha":
-        return pointsToMeshOpen3d(pc, "alpha")
+        return pointsToMeshOpen3d(pc, "alpha", alpha)
     else:
         raise Exception(f"Unknown conversion type {method}")
 
