@@ -75,7 +75,14 @@ def pointsToMeshOpen3d(pc: np.ndarray, method=None):
     else:
         mesh, _ = o3d.geometry.TriangleMesh.create_from_point_cloud_poisson(pcd=pcd, depth=5)  # Can play around with the depth parameter
 
-    return trimesh.Trimesh(np.asarray(mesh.vertices), np.asarray(mesh.triangles))
+    tri_mesh = trimesh.Trimesh(np.asarray(mesh.vertices), np.asarray(mesh.triangles))
+
+    # IDK which all of these are the right one, but fix_inversions was the key before
+    trimesh.repair.fix_winding(tri_mesh)
+    trimesh.repair.fix_inversion(tri_mesh)
+    trimesh.repair.fill_holes(tri_mesh)
+
+    return tri_mesh
 
 
 def pointsToMesh(pc: np.ndarray, method=None):
