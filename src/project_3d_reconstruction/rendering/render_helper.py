@@ -25,27 +25,43 @@ def positionOnly(x, y, z):
 
 
 def pointingAtOrigin(x, r):
-    c = r**-0.5
+    c = r ** -0.5
     # ???
     # invalid rotations for c!=2
-    return [[1, 0, 0, x], [0, c, -c, -r], [0, c, c, r], [0, 0, 0, 1]]
+    return [[1, 0, 0, x],
+            [0, c, -c, -r],
+            [0, c, c, r],
+            [0, 0, 0, 1]]
+
+
 def pointingAtOrigin2(x, r):
-    c = 2**-0.5
+    c = 2 ** -0.5
     # ???
     # invalid rotations for c!=2
     return [[1, 0, 0, x], [0, c, -c, -r], [0, c, c, r], [0, 0, 0, 1]]
+
+
+FILE_PATH = os.path.abspath(
+    os.path.join(os.path.abspath(__file__), "..", "..", "..", "..", "mesh_files")
+)
+OBJECTS = [
+    os.path.join(FILE_PATH, "coral_2", "untitled.dae"),
+    os.path.join(FILE_PATH, "coral_4", "untitled.dae"),
+    os.path.join(FILE_PATH, "rock_1", "untitled.dae"),
+    os.path.join(FILE_PATH, "braincoral_1", "untitled.dae"),
+]
 
 
 class RenderHelper:
     def __init__(self):
         # Initialize scene
-        self.scene = pyrender.Scene(ambient_light=[0.1, 0.1, 0.3], bg_color=[0, 0, 0])
+        self.scene = pyrender.Scene(ambient_light=[255,255,255], bg_color=[255,255,255])
 
         self.cameraNode = None
 
         # Hard code light for now
-        light = pyrender.DirectionalLight(color=[1, 1, 1], intensity=2e3)
-        self.scene.add(light, pose=np.eye(4))
+        #light = pyrender.DirectionalLight(color=[1, 1, 1], intensity=2e3)
+        #self.scene.add(light, pose=np.eye(4))
 
         self.moveCamera(pointingAtOrigin(0, 2))
 
@@ -62,6 +78,11 @@ class RenderHelper:
     def loadFromPath(self, file_path, dict_key):
         mesh = trimesh.load(file_path, force="mesh")
         self.meshDict[dict_key] = mesh
+
+    def loadExample(self, pose):
+        path = os.path.join(FILE_PATH, "pyrender_examples", "fuze.obj")
+        fuze_trimesh = trimesh.load(path)
+        self.addFromTrimesh(fuze_trimesh, pose)
 
     def addFromMeshDict(self, dict_key, pose):
         self.addFromTrimesh(self.meshDict[dict_key], pose)
@@ -138,17 +159,6 @@ def makeTestScene2():
     renderer.render(show_image=True, image_filename="test2.png")
 
 
-FILE_PATH = os.path.abspath(
-    os.path.join(os.path.abspath(__file__), "..", "..", "..", "..", "mesh_files")
-)
-OBJECTS = [
-    os.path.join(FILE_PATH, "coral_2", "untitled.dae"),
-    os.path.join(FILE_PATH, "coral_4", "untitled.dae"),
-    os.path.join(FILE_PATH, "rock_1", "untitled.dae"),
-    os.path.join(FILE_PATH, "braincoral_1", "untitled.dae"),
-]
-
-
 def makeTestScene3():
     renderer = RenderHelper()
 
@@ -183,5 +193,20 @@ def makeTestScene3():
     renderer.render(show_image=True, image_filename="test2.png")
 
 
+def makeTestScene4():
+    s = np.sqrt(2) / 2
+    camera_pose = np.array([
+        [0.0, -s, s, 0.3],
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, s, s, 0.35],
+        [0.0, 0.0, 0.0, 1.0], ]
+    )
+
+    r = RenderHelper()
+    r.loadExample(positionOnly(0, 0, 0))
+    r.moveCamera(camera_pose)
+    r.render(show_image=True)
+
+
 if __name__ == "__main__":
-    makeTestScene3()
+    makeTestScene4()
