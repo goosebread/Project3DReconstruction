@@ -36,6 +36,15 @@
 {\MakeUppercase}
 
 \usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\captionsetup[table]{labelfont=bf}
+\captionsetup[figure]{labelfont=bf}
+\captionsetup[lstlisting]{labelfont=bf}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Tweak \maketile layout
@@ -62,7 +71,7 @@
 \maketitle
 \vfill
 \begin{abstract}
-    We implement an end-to-end 3D reconstruction system and a suite of tests for quantifying its performance. The reconstruction system ingests a series of 2D images of an object and generates a representative mesh of the object in 3D space. We follow the development in \cite{9229407} to design this system. The core algorithm performs feature point extraction and bundle adjustment to estimate 3D point clouds, from which the final mesh is reconstructed.  Furthermore, we have created a test system to generate synthetic images from 3D models.  The reconstructed meshes can be compared against the initial meshes to determine overall system performance.
+    We implement an end-to-end 3D reconstruction system and a suite of tests for quantifying its performance. The reconstruction system ingests a series of 2D images of an object and generates a representative mesh of the object in 3D space. We follow the development in \cite{9229407} to design this system. The core algorithm performs feature point extraction and triangulation to estimate 3D point clouds, from which the final mesh is reconstructed.  Furthermore, we have created a test system to generate synthetic images from 3D models.  The reconstructed meshes can be compared against the initial meshes to determine overall system performance.
 \end{abstract}
 \clearpage
 \tableofcontents
@@ -88,11 +97,128 @@ For the remaining point matches, the algebraic solution is used to recover 3D po
 
 Once we have a point cloud, we need to reconstruct a mesh and compare against the ground truth.  A mesh is parameterized by a list of points and a list of triangular faces spanning those points.  Furthermore, the mesh needs to be closed so that we can perform comparisons against the ground truth mesh.  Though a mesh with holes is useful for a variety of reconstruction applications, the comparisons we have chosen as the baseline require the ability to compute the volume of the mesh.  There are a variety of approaches to solve this, and the current best that we have tested is Poisson Surface Reconstruction \cite{10.5555/1281957.1281965}.  This algorithm attempts to solve an optimization problem to create a smooth surface that minimizes the deviation from the point cloud.  Importantly, all the object reconstruction algorithms we tested assume that the entire point cloud belongs to a single object. As we might be imaging multiple objects, we implemented a point cloud clustering algorithm to segment the cloud by selecting continuous, dense areas.  Once we have reconstructed a mesh for an object, we compute the ratio between the intersection volume and union volume of the reconstructed and ground truth meshes.
 
+\section{Results}
+To evaluate the pipeline we created reconstructions of 6 objects.  Each object was rendered from 40 views spaced evenly around the object, which were paired sequentially into 39 pairs for feature matching.  The resulting 3D points for each pair were transformed to a common frame using the known camera extrinsics to create the final point cloud.  An example of feature extraction and matching is shown in Figure~\ref{fig:feature-match}, and an example output point cloud is shown in Figure~\ref{fig:point-cloud}.
+
+%\let\maybefbox\fbox
+\let\maybefbox\relax
+
+\begin{figure}[h!]\centering
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}\centering
+        \maybefbox{\includegraphics[width=0.9\linewidth,clip,trim={2cm 1cm 0.5cm 2cm}]{./images/duck_featurematch.png}}
+        \vspace{1.5cm}
+        \caption{TODO: feature match}\label{fig:feature-match}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.45\linewidth}\centering
+        \maybefbox{\includegraphics[width=0.9\linewidth,trim={10cm 2cm 18cm 3cm},clip]{./images/duck_points.png}}
+        \caption{TODO: point cloud}\label{fig:point-cloud}
+    \end{subfigure}
+    \hfill
+\end{figure}
+
+The mesh reconstruction portion of the pipeline has issues.  We tested four different mesh reconstruction algorithms extensively on point clouds generated from the vertices of ground-truth meshes to verify functionality and test their robustness to added noise.  All four algorithms performed adequately against simple test data; however, none of them were sufficient to fully reconstruct a satisfactory mesh from the generated point clouds.  Failure modes ranged from simply refusing to generate any output to generating a mesh that was not ‘watertight’, meaning that it has at least one hole.  Meshes need to be watertight to have a volume, so for non-watertight meshes we are unable to calculate the intersection over union ratio.  We believe the problem is twofold: the generated point clouds have regions of lower density, and occasionally have significant artifacts.  The mesh reconstruction algorithms we tested fit into two types, those that attempt to solve an optimization problem to generate a mesh that closely matches the point cloud, and those that directly use the point cloud as vertices and attempt to solve for connections through various heuristics.  The optimization based solvers would generally fail to provide any meaningful output; we believe this was because they were not robust to the small number of large outlier points.  The heuristic based approaches likely failed for the other reason, as the heuristics they used relied on user-provided, spatial scale parameters.  Because they were essentially looking for vertex connections at specific scales, they were not robust to point clouds with sparser areas, and left gaps in the resulting mesh.
+
+As a workaround, the intersection over union ratio of the convex hulls of the ground truth and the reconstructed mesh is shown in Table~\ref{tab:iou}.  Figures~\ref{fig:reconstruct-a} to~\ref{fig:reconstruct-e} show actual mesh reconstructions in red and the ground truth meshes used to create them in blue.
+
+\begin{figure}[p]\centering
+    \vspace{-5mm}
+    \hfill
+    \begin{subfigure}[b]{0.42\linewidth}\centering
+        \maybefbox{\includegraphics[width=\linewidth,trim={5cm 5cm 6cm 4cm},clip]{./images/drill_mesh_0p7288.png}}
+        \caption{\texttt{drill}.}\label{fig:reconstruct-a}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.42\linewidth}\centering
+        \maybefbox{\includegraphics[width=\linewidth,trim={12cm 2cm 12cm 3cm},clip]{./images/coral4_overlap.png}}
+        \caption{\texttt{coral}.}
+    \end{subfigure}
+    \hfill
+    \\
+    \hfill
+    \begin{subfigure}[b]{0.42\linewidth}\centering
+        \maybefbox{\includegraphics[width=\linewidth,trim={6cm 5cm 7cm 4cm},clip]{./images/braincoral_mesh.png}}
+        \caption{\texttt{braincoral}.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.42\linewidth}\centering
+        \maybefbox{\includegraphics[width=\linewidth,trim={8cm 4cm 6cm 4cm},clip]{./images/rock_1_mesh_0p908654_2.png}}
+        \caption{\texttt{rock}.}
+    \end{subfigure}
+    \hfill
+    \\
+    \hspace{0pt}
+    \hfill
+    \begin{subfigure}[b]{0.35\linewidth}\centering
+       \maybefbox{ \includegraphics[width=\linewidth]{./images/duck_2.png}}
+        \caption{\texttt{duck}.}\label{fig:reconstruct-e}
+    \end{subfigure}
+    \hfill\hspace{0pt}
+    \caption{Comparison of triangulated points (red) and mesh from ground truth points (blue).}\label{fig:reconstructed-mesh}
+\end{figure}
+
 %
 %\nocite{9229407}
 %\nocite{DVN/CU4UXG_2021}
 %\nocite{Olsson}
 %\nocite{shrestha2022real}
+
+
+
+\begin{table}\centering
+    \def\arraystretch{1.2}
+    \caption{Intersection-over-union ratios of reconstructed mesh convex hulls.}\label{tab:iou}
+    \begin{tabularx}{0.9\linewidth}{
+            >{\ttfamily}m{1.5cm}
+            *{5}{S[table-format=1.6]}
+        }
+        \toprule
+        Mesh ID & \multicolumn{1}{m{2.5cm}}{\centering{}Reference Volume}
+        &  \multicolumn{1}{m{2.5cm}}{\centering{}Reconstruction Volume}
+        &  \multicolumn{1}{m{2.5cm}}{\centering{}Intersection Volume}
+        &  \multicolumn{1}{m{2.5cm}}{\centering{}Union Volume}
+        & IOU\\
+        \midrule
+        drill &0.004353 & 0.003242 & 0.002466 & 0.003610 &0.710803\\
+        watermelon
+        &0.167625
+        &0.474492
+        &0.135572
+        &0.506544
+        &0.267642
+        \\
+        rock
+        &0.085119
+        &0.083343
+        &0.080197
+        &0.088262
+        &0.908721\\
+        coral
+        &0.265899
+        &0.250872
+        &0.195403
+        &0.321368
+        &0.608038\\
+        braincoral
+        &0.067472
+        &0.086752
+        &0.060747
+        &0.093479
+        &0.649842\\
+        duck
+        &0.452759
+        &1.043153
+        &0.448126
+        &1.047785
+        &0.427689\\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+%\clearpage
+\section{Conclusion}
+This project has implemented a 3D reconstruction algorithm pipeline and a ground truth data generation system to test it with.  Each component of the pipeline has been successfully run in isolation; however, due to time constraints, the full pipeline is not entirely functional.  We can successfully generate images of an arbitrary scene from multiple views, extract OpponentSIFT features, match them between images, and reconstruct a point cloud from the feature matches.  The mesh reconstruction portion of the pipeline is currently unable to create watertight meshes, and as such the intersection over union comparison can not be performed directly.  We believe this is likely due to a combination of noise in the reconstructed point cloud and insufficient point cloud density in some locations.
 
 \clearpage
 %\section{References}
